@@ -1,0 +1,194 @@
+{
+  "name": "VeriWay_Demo",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e2a85f1d-4ed0-469e-942b-6a0d1e1b9897",
+      "name": "When chat message received",
+      "webhookId": "09190136-39f3-4bad-92d4-00b17cc90fe0"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.upstage.ai/v1/solar/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer up_SJHVLVnQw75wxCz3jpOOTdFHS0glD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"solar-pro2\",\n  messages: [\n    {\n      role: \"system\",\n      content: \"사용자의 문장에서 출발지, 목적지, 이동상태를 추출해서 JSON으로만 반환해라.\"\n    },\n    {\n      role: \"user\",\n      content: $json.chatInput\n    }\n  ],\n  temperature: 0.2\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e74f932a-d891-4ed4-a945-55eda72c312c",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.choices[0].message.content;\n\nconst match = text.match(/```json\\s*([\\s\\S]*?)```/);\nconst jsonStr = match ? match[1].trim() : text.trim();\n\nreturn [\n  {\n    json: JSON.parse(jsonStr)\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        64
+      ],
+      "id": "f60f2f8e-ab18-4465-b43c-3a1cb71bebe0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1z_04RJXti3M4g2p5E76A9IPNZs_bH3EtpMJo78uty6c",
+          "mode": "list",
+          "cachedResultName": "VeriWay",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z_04RJXti3M4g2p5E76A9IPNZs_bH3EtpMJo78uty6c/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "시트1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z_04RJXti3M4g2p5E76A9IPNZs_bH3EtpMJo78uty6c/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        64
+      ],
+      "id": "d5e0c85d-cec1-49a3-9ddd-aaa772661669",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "OBrEFiy3WeAiXRZv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const { 출발지, 목적지, 이동상태 } = $('Code in JavaScript').first().json;\nconst routes = $input.all().map(i => i.json);\n\nconst 계단제한 = [\"목발\", \"캐리어\", \"휠체어\"].some(k => 이동상태?.includes(k));\nconst 엘리베이터필요 = 이동상태?.includes(\"휠체어\");\n\nconst filtered = routes.filter(r =>\n  r[\"출발지\"] === 출발지 &&\n  r[\"목적지\"] === 목적지 &&\n  (!계단제한 || r[\"계단\"] === \"없음\") &&\n  (!엘리베이터필요 || r[\"엘리베이터\"] === \"있음\")\n);\n\nif (!filtered.length) return [{ json: { output: `${출발지}→${목적지} 조건에 맞는 경로가 없어요.` } }];\n\nconst r = filtered[0];\nreturn [{ json: {\n  output: `🗺️ ${r[\"출발지\"]} → ${r[\"목적지\"]}\\n📍 경로 ${r[\"경로ID\"]}번 | 🪜 계단 ${r[\"계단\"]} | 🛗 엘리베이터 ${r[\"엘리베이터\"]}\\n💬 ${r[\"안내문\"]}`,\n  경로ID: r[\"경로ID\"],\n  출발지: r[\"출발지\"],\n  목적지: r[\"목적지\"],\n  계단: r[\"계단\"],\n  엘리베이터: r[\"엘리베이터\"],\n  안내문: r[\"안내문\"]\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        64
+      ],
+      "id": "022dc203-8c47-40bd-aedf-2231381a89de",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        976,
+        64
+      ],
+      "id": "620f5abe-f9ca-442b-8a03-c2b81b6dd7cc",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1f297dea-a254-4507-b838-bc42eee2766d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "96ee0c8ec6246f34e5f929f4b0e478bcbbb0d69b35e4d0494930213dbcaf0bdf"
+  },
+  "id": "AKtlD6GSvdc0kMcz",
+  "tags": []
+}
