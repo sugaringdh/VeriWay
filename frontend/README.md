@@ -1,93 +1,16 @@
-# VeriWay 🗺️
-**배리어프리 이동경로 추천 서비스**
+# React + Vite
 
-숙명여자대학교 캠퍼스 내에서 이동약자를 위한 AI 기반 경로 안내 어시스턴스
-목발, 휠체어, 캐리어 등 사용자의 상황을 자연어로 입력하면 계단 없는 경로를 자동으로 추천해줍니다.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
----
+Currently, two official plugins are available:
 
-## 주요 기능
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-- 자연어 입력으로 출발지 · 목적지 · 이동상태 자동 추출
-- 이동상태에 따른 맞춤 경로 필터링 (계단 유무, 엘리베이터 여부)
-- 구글 시트 기반 경로 데이터 관리 (코드 수정 없이 경로 추가 가능)
-- 캠퍼스 지도 위 경로 시각화 (개발 중)
+## React Compiler
 
----
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## 사용 예시
+## Expanding the ESLint configuration
 
-```
-"학생회관에서 순헌관으로 목발 짚고 가고 싶어"
-→ 계단 없는 B 경로 안내
-
-"휠체어 타고 중앙도서관 가는 길 알려줘"
-→ 엘리베이터 있는 경로 안내
-```
-
----
-
-## 기술 스택
-
-| 역할 | 기술 |
-|---|---|
-| 워크플로우 자동화 | n8n |
-| 자연어 처리 | Upstage Solar LLM |
-| 경로 데이터 저장 | Google Sheets |
-| 지도 시각화 | OpenStreetMap (Leaflet.js) |
-
----
-
-## 프로젝트 구조
-
-```
-VeriWay/
-├── README.md
-├── workflow/
-│   └── veriway.json       # n8n 워크플로우 (import해서 사용)
-└── web/
-    └── index.html         # 지도 웹페이지 (개발 중)
-```
-
----
-
-## 워크플로우 구조
-
-```
-사용자 입력
-    ↓
-Upstage Solar LLM — 출발지 / 목적지 / 이동상태 추출
-    ↓
-Google Sheets — 경로 데이터 조회
-    ↓
-JavaScript — 이동상태에 따른 경로 필터링
-    ↓
-경로 안내 응답
-```
-
----
-
-## n8n 워크플로우 불러오기
-
-1. n8n 접속
-2. 우측 상단 메뉴 → **Import from file**
-3. `workflow/veriway.json` 선택
-4. Upstage API 키, Google Sheets 연동 설정
-
----
-
-## 경로 데이터 추가 방법
-
-Google Sheets에 아래 형식으로 행을 추가하면 바로 반영됩니다.
-
-| 출발지 | 목적지 | 경로ID | 계단 | 엘리베이터 | 경사 | 추천대상 | 안내문 |
-|---|---|---|---|---|---|---|---|
-| 학생회관 | 순헌관 | A | 있음 | 없음 | 중간 | 일반 | 가장 빠르지만 계단이 있습니다. |
-| 학생회관 | 순헌관 | B | 없음 | 있음 | 낮음 | 목발,휠체어,캐리어 | 계단 없이 우회할 수 있는 경로입니다. |
-
----
-
-## 팀
-
-**FIT** — 2026 Low-Code AI Challenge
-숙명여자대학교
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
