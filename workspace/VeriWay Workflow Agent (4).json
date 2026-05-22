@@ -1,0 +1,340 @@
+{
+  "name": "VeriWay Workflow Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.upstage.ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"solar-pro3\",\n  messages: [\n    {\n      role: \"system\",\n      content: \"너는 VeriWay 배리어프리 이동경로 추천 서비스의 입력 분석 AI다. 사용자의 자연어 문장에서 출발지, 목적지, 이동 상태, 피해야 할 요소, 필요한 편의시설을 추출한다. 반드시 JSON만 출력한다. 마크다운 코드블록, 설명 문장, 주석은 절대 출력하지 않는다. 출력 형식은 {\\\"start\\\":\\\"\\\", \\\"destination\\\":\\\"\\\", \\\"mobility_condition\\\":\\\"\\\", \\\"avoid\\\":[], \\\"needs\\\":[], \\\"user_type\\\":\\\"\\\", \\\"missing_info\\\":[], \\\"confidence\\\":\\\"\\\"} 이다. 출발지가 없으면 start는 빈 문자열로 두고 missing_info에 \\\"출발지\\\"를 넣는다. 목적지가 없으면 destination은 빈 문자열로 두고 missing_info에 \\\"목적지\\\"를 넣는다.\\n\\n이동 상태 의미 매핑 규칙은 다음과 같다.\\n\\n1. 목발, 발목 부상, 다리 부상, 깁스, 무릎 통증, 발 다침, 다리가 아픔과 같은 표현은 mobility_condition을 \\\"목발/부상\\\"으로 분류한다. avoid에는 \\\"계단\\\", \\\"급경사\\\"를 넣는다. needs에는 \\\"엘리베이터\\\", \\\"경사로\\\", \\\"평탄한 보도\\\"를 넣는다.\\n\\n2. 휠체어 사용자는 mobility_condition을 \\\"휠체어\\\"로 분류한다. avoid에는 \\\"계단\\\", \\\"급경사\\\", \\\"턱\\\"을 넣는다. needs에는 \\\"엘리베이터\\\", \\\"경사로\\\", \\\"평탄한 보도\\\"를 넣는다.\\n\\n3. 캐리어, 짐 많음, 무거운 짐, 여행가방과 같은 표현은 mobility_condition을 \\\"캐리어/짐\\\"으로 분류한다. avoid에는 \\\"계단\\\"을 넣는다. needs에는 \\\"엘리베이터\\\", \\\"평탄한 보도\\\", \\\"짧은 거리\\\"를 넣는다.\\n\\n4. 유모차 사용자는 mobility_condition을 \\\"유모차\\\"로 분류한다. avoid에는 \\\"계단\\\", \\\"턱\\\", \\\"급경사\\\"를 넣는다. needs에는 \\\"엘리베이터\\\", \\\"경사로\\\", \\\"평탄한 보도\\\"를 넣는다.\\n\\n5. 임산부, 노약자, 어르신, 몸이 불편함과 같은 표현은 mobility_condition을 \\\"임산부/노약자\\\"로 분류한다. avoid에는 \\\"계단\\\", \\\"급경사\\\", \\\"긴 이동거리\\\"를 넣는다. needs에는 \\\"엘리베이터\\\", \\\"완만한 경로\\\", \\\"평탄한 보도\\\"를 넣는다.\\n\\n6. 사용자가 이동 상태를 명확히 말하지 않으면 mobility_condition은 \\\"일반\\\"으로 둔다. 단, 사용자가 계단 없는 길, 편한 길, 엘리베이터 있는 길을 요청하면 avoid와 needs에 해당 조건을 반영한다.\\n\\n사용자의 표현이 위 단어와 정확히 일치하지 않아도 의미가 유사하면 해당 이동 상태로 분류한다. 예를 들어 \\\"발 다쳤어\\\", \\\"발목 아파\\\", \\\"깁스했어\\\"는 \\\"목발/부상\\\" 유형으로 처리한다. \\\"짐이 많아\\\", \\\"캐리어 끌고 가\\\"는 \\\"캐리어/짐\\\" 유형으로 처리한다.\\n\\n최종 출력은 반드시 JSON 객체 하나만 출력한다.\"\n    },\n    {\n      role: \"user\",\n      content: $json.cleaned_input || \"\"\n    }\n  ],\n  stream: false\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -464,
+        576
+      ],
+      "id": "37e205d1-16d7-48bd-b0a3-1261b8bbcbbf",
+      "name": "Upstage Solar - 이동 조건 JSON 추출",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VxLPHfFYCT88GYDI",
+          "name": "Upstage API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "28ff270c-188d-43de-80d9-b6be8f7c903e",
+              "leftValue": "={{ $json.has_route }}",
+              "rightValue": "is true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        48,
+        624
+      ],
+      "id": "7157a4b7-5d0c-4195-906b-65b101214b00",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.upstage.ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"solar-pro3\",\n  messages: [\n    {\n      role: \"system\",\n      content: \"너는 VeriWay 배리어프리 이동경로 추천 서비스의 안내 AI다. 입력된 사용자 이동 조건과 추천 경로 데이터를 바탕으로 친절하고 명확한 한국어 안내문을 작성한다. 답변 형식은 반드시 [이동 조건 분석], [추천 경로], [추천 근거], [피해야 할 장애물], [이용 가능한 편의시설], [건물 내부 길찾기], [데이터 확인 정보], [주의할 점] 순서로 작성한다. 계단, 엘리베이터, 경사, 추천대상, 안내문, 경로 설명, 장애물, 편의시설, 내부안내, 데이터출처, 마지막확인일, 검증여부 정보를 반드시 활용한다. 없는 정보는 지어내지 말고 확인이 필요하다고 말한다.\"\n    },\n    {\n      role: \"user\",\n      content:\n        \"다음 데이터를 바탕으로 사용자에게 배리어프리 경로 안내문을 작성해줘.\\n\\n\" +\n\n        \"[사용자 조건]\\n\" +\n        \"출발지: \" + ($json.start || \"정보 없음\") + \"\\n\" +\n        \"도착지: \" + ($json.destination || \"정보 없음\") + \"\\n\" +\n        \"이동 상태: \" + ($json.mobility_condition || \"정보 없음\") + \"\\n\" +\n        \"피해야 할 요소: \" + (($json.avoid || []).join(\", \") || \"정보 없음\") + \"\\n\" +\n        \"필요한 시설: \" + (($json.needs || []).join(\", \") || \"정보 없음\") + \"\\n\\n\" +\n\n        \"[추천 경로 데이터]\\n\" +\n        \"경로ID: \" + ($json.best_route?.[\"경로ID\"] || \"정보 없음\") + \"\\n\" +\n        \"출발지: \" + ($json.best_route?.[\"출발지\"] || \"정보 없음\") + \"\\n\" +\n        \"목적지: \" + ($json.best_route?.[\"목적지\"] || \"정보 없음\") + \"\\n\" +\n        \"계단: \" + ($json.best_route?.[\"계단\"] || \"정보 없음\") + \"\\n\" +\n        \"엘리베이터: \" + ($json.best_route?.[\"엘리베이터\"] || \"정보 없음\") + \"\\n\" +\n        \"경사: \" + ($json.best_route?.[\"경사\"] || \"정보 없음\") + \"\\n\" +\n        \"추천대상: \" + ($json.best_route?.[\"추천대상\"] || \"정보 없음\") + \"\\n\" +\n        \"안내문: \" + ($json.best_route?.[\"안내문\"] || \"정보 없음\") + \"\\n\" +\n        \"경로 설명: \" + ($json.best_route?.[\"경로 설명\"] || \"정보 없음\") + \"\\n\" +\n        \"장애물: \" + ($json.best_route?.[\"장애물\"] || \"정보 없음\") + \"\\n\" +\n        \"편의시설: \" + ($json.best_route?.[\"편의시설\"] || \"정보 없음\") + \"\\n\" +\n        \"내부안내: \" + ($json.best_route?.[\"내부안내\"] || \"정보 없음\") + \"\\n\" +\n        \"경로 점수: \" + ($json.best_route?.route_score || \"정보 없음\") + \"\\n\\n\" +\n\n        \"[데이터 신뢰성]\\n\" +\n        \"데이터출처: \" + ($json.best_route?.[\"데이터출처\"] || \"정보 없음\") + \"\\n\" +\n        \"마지막확인일: \" + ($json.best_route?.[\"마지막확인일\"] || \"정보 없음\") + \"\\n\" +\n        \"검증여부: \" + ($json.best_route?.[\"검증여부\"] || \"정보 없음\") + \"\\n\" +\n        \"오류신고링크: \" + ($json.best_route?.[\"오류신고링크\"] || \"정보 없음\")\n    }\n  ],\n  stream: false\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        256,
+        624
+      ],
+      "id": "71fafbd1-cf83-4e93-b1ae-9ad781b4b4f8",
+      "name": "Upstage Solar - 최종 경로 안내문 생성",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VxLPHfFYCT88GYDI",
+          "name": "Upstage API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $json.choices?.[0]?.message?.content || \"\";\nlet parsed;\ntry { parsed = JSON.parse(content); } catch (e) {\n  parsed = { start: \"\", destination: \"\", mobility_condition: \"\", avoid: [], needs: [], user_type: \"\", missing_info: [], confidence: \"low\" };\n}\n\nconst preStart = $(\"Input_Preprocess\").first().json.extracted_start || \"\";\nconst preDest  = $(\"Input_Preprocess\").first().json.extracted_destination || \"\";\n\nif (!parsed.start && preStart)        parsed.start       = preStart;\nif (!parsed.destination && preDest)   parsed.destination = preDest;\n\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        80
+      ],
+      "id": "e2dfbeea-c068-4b26-8461-748e0d07e22b",
+      "name": "JSON_Parse_Check"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n 버전에 따라 body가 $json 직접 또는 $json.body 아래에 올 수 있음\nconst body = $json.body || $json;\nconst input = body.chatInput || body.message || body.text || \"\";\nconst frontStart = body.start || \"\";\nconst frontDest  = body.destination || \"\";\nconst cleanedInput = input.trim().replace(/\\s+/g, \" \");\nreturn [{ json: {\n  original_input: input,\n  cleaned_input: cleanedInput,\n  extracted_start: frontStart,\n  extracted_destination: frontDest\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        224
+      ],
+      "id": "36d94150-cf89-46d6-a0ba-890fedb79894",
+      "name": "Input_Preprocess"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1zMUzW5DOTu8grUNsc_2hwlcsCyhRhe4weJ9quHF7Hr4",
+          "mode": "list",
+          "cachedResultName": "VeriWay_v2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zMUzW5DOTu8grUNsc_2hwlcsCyhRhe4weJ9quHF7Hr4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "시트1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zMUzW5DOTu8grUNsc_2hwlcsCyhRhe4weJ9quHF7Hr4/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        0
+      ],
+      "id": "10c6c3ac-e872-4f0f-9301-1bdb31e630fc",
+      "name": "Google_Sheets_Routes",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8o4manciE1eGtHym",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// ══════════════════════════════════════════════\n//  VeriWay – 구간 기반 Dijkstra 경로 탐색\n// ══════════════════════════════════════════════\n\n// ── 건물명 정규화 (별칭 → 정식명) ──────────────\nconst NAME_ALIAS = {\n  '\\uB208\\uAF43\\uAD11\\uC7A5\\uD648': '\\uB208\\uAF43\\uAD11\\uC7A5',\n  '\\uD504\\uB77C\\uC774\\uAD00':       '\\uD504\\uB77C\\uC784\\uAD00',\n  '\\uC2A4\\uD0C0\\uBC85\\uC2A4':       '\\uD504\\uB77C\\uC784\\uAD00',\n  '\\uB3C4\\uC11C\\uAD00':             '\\uC911\\uC559\\uB3C4\\uC11C\\uAD00',\n  '\\uBBF8\\uC220\\uB300':             '\\uBBF8\\uC220\\uB300\\uD559',\n  '\\uC74C\\uC545\\uB300':             '\\uC74C\\uC545\\uB300\\uD559',\n  '\\uC57D\\uD559\\uB300':             '\\uC57D\\uD559\\uB300\\uD559',\n  '\\uBC31\\uC8FC\\uB144\\uAD00':       '\\uBC31\\uC8FC\\uB144\\uAE30\\uB150\\uAD00',\n  '\\uCC3D\\uD559\\uAD00':             '\\uBC31\\uC8FC\\uB144\\uAE30\\uB150\\uAD00',\n};\nfunction normName(n) {\n  const s = (n || '').trim();\n  return NAME_ALIAS[s] || s;\n}\n\nconst allItems = $input.all();\nconst segments = allItems.map(item => item.json);\n\nconst user      = $('JSON_Parse_Check').first().json;\nconst userStart = normName(user.start        || '');\nconst userDest  = normName(user.destination  || '');\nconst mobility  = (user.mobility_condition || '').toLowerCase();\n\nif (!userStart || !userDest) {\n  return [{ json: {\n    ...user, has_route: false, best_route: null,\n    route_description: '\\uCD9C\\uBC1C\\uC9C0 \\uB610\\uB294 \\uBAA9\\uC801\\uC9C0\\uB97C \\uC778\\uC2DD\\uD558\\uC9C0 \\uBABB\\uD588\\uC5B4\\uC694.'\n  }}];\n}\nif (userStart === userDest) {\n  return [{ json: {\n    ...user, has_route: true,\n    path: [userStart],\n    route_description: userStart,\n    best_route: { '\\uCD9C\\uBC1C\\uC9C0': userStart, '\\uBAA9\\uC801\\uC9C0': userDest, '\\uACBD\\uB85C \\uC124\\uBA85': userStart, '\\uACBD\\uB85CID': 'AUTO' }\n  }}];\n}\n\n// ── 이동 조건 판단 ──────────────────────────\nconst noStairs   = mobility.includes('\\uD720\\uCCB4\\uC5B4') || mobility.includes('\\uBAA9\\uBC1C') || mobility.includes('\\uBCF4\\uC870');\nconst needsElev  = mobility.includes('\\uD720\\uCCB4\\uC5B4');\nconst avoidSlope = mobility.includes('\\uD720\\uCCB4\\uC5B4') || mobility.includes('\\uBAA9\\uBC1C');\n\n// ── 그래프 구성 ──────────────────────────────\nconst graph = {};\nfor (const seg of segments) {\n  const from = normName(seg['\\uCD9C\\uBC1C\\uC9C0'] || seg['\\uCD9C\\uBC1C'] || '');\n  const to   = normName(seg['\\uBAA9\\uC801\\uC9C0'] || seg['\\uB3C4\\uCC29'] || '');\n  if (!from || !to) continue;\n\n  const hasStairs = (seg['\\uACC4\\uB2E8'] || '\\uC5C6\\uC74C') === '\\uC788\\uC74C' || (seg['\\uACC4\\uB2E8'] || '') === 'O';\n  const hasElev   = (seg['\\uC5D8\\uB9AC\\uBCA0\\uC774\\uD130'] || 'X')  === '\\uC788\\uC74C' || (seg['\\uC5D8\\uB9AC\\uBCA0\\uC774\\uD130'] || '') === 'O';\n  const slope     = (seg['\\uACBD\\uC0AC'] || '\\uC5C6\\uC74C');\n  const guide     = seg['\\uC548\\uB0B4\\uBB38'] || '';\n\n  // 접근성 필터: 계단 있고 엘리베이터도 없으면 건너뜀\n  if (noStairs && hasStairs && !hasElev) continue;\n\n  // 가중치\n  let w = 1;\n  if (slope === '\\uAE09\\uD568')  w += avoidSlope ? 6 : 1.5;\n  if (slope === '\\uC644\\uB9CC')  w += avoidSlope ? 1.5 : 0.3;\n  if (hasStairs && !hasElev) w += noStairs ? 10 : 0.5;\n  if (needsElev && !hasElev) w += 2;\n\n  if (!graph[from]) graph[from] = [];\n  graph[from].push({ to, w, guide });\n}\n\n// ── Dijkstra ─────────────────────────────────\nconst dist   = { [userStart]: 0 };\nconst prev   = {};\nconst gmap   = {};\nconst vis    = new Set();\nconst queue  = [{ node: userStart, d: 0 }];\n\nwhile (queue.length > 0) {\n  queue.sort((a, b) => a.d - b.d);\n  const { node } = queue.shift();\n  if (vis.has(node)) continue;\n  vis.add(node);\n  if (node === userDest) break;\n  if (!graph[node]) continue;\n\n  for (const { to, w, guide } of graph[node]) {\n    const nd = (dist[node] || 0) + w;\n    if (nd < (dist[to] !== undefined ? dist[to] : Infinity)) {\n      dist[to] = nd;\n      prev[to]  = node;\n      gmap[to]  = guide;\n      queue.push({ node: to, d: nd });\n    }\n  }\n}\n\n// ── 경로 복원 ────────────────────────────────\nif (!prev[userDest]) {\n  return [{ json: {\n    ...user, has_route: false, best_route: null,\n    route_description: userStart + '\\uC5D0\\uC11C ' + userDest + '\\uAE4C\\uC9C0 \\uACC4\\uB2E8 \\uC5C6\\uC774 \\uAC08 \\uC218 \\uC788\\uB294 \\uACBD\\uB85C\\uAC00 \\uC5C6\\uC5B4\\uC694.'\n  }}];\n}\n\nconst path = [], guides = [];\nlet cur = userDest;\nwhile (cur) { path.unshift(cur); if (gmap[cur]) guides.unshift(gmap[cur]); cur = prev[cur]; }\n\nconst routeDesc = path.join(' \\u2192 ');\n\nreturn [{ json: {\n  ...user,\n  start: userStart,\n  destination: userDest,\n  has_route: true,\n  path,\n  route_description: routeDesc,\n  segment_guides: guides,\n  best_route: {\n    '\\uCD9C\\uBC1C\\uC9C0':   userStart,\n    '\\uBAA9\\uC801\\uC9C0':   userDest,\n    '\\uACBD\\uB85C \\uC124\\uBA85': routeDesc,\n    '\\uACBD\\uB85CID':      'AUTO',\n    '\\uB0B4\\uBD80\\uC548\\uB0B4':  guides.filter(Boolean).join(' / '),\n    '\\uC9C0\\uB3C4\\uC88C\\uD45C':  null\n  }\n}}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        624
+      ],
+      "id": "af946f97-a257-4d8b-8135-c2d4ba630bc2",
+      "name": "Route_Filter"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "veriway-route",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -752,
+        400
+      ],
+      "id": "430b1a93-7000-401f-8bc2-1b0d43fbb34f",
+      "name": "Webhook_Input",
+      "webhookId": "bda2dd60-ea98-4fc2-91df-a430ee2031c0"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ answer: $json.choices[0].message.content, start: $('Route_Filter').first().json.start, destination: $('Route_Filter').first().json.destination, mobility_condition: $('Route_Filter').first().json.mobility_condition, route_id: 'AUTO', route_description: $('Route_Filter').first().json.route_description || null, indoor_guide: ($('Route_Filter').first().json.segment_guides || []).join(' / ') || null, coordinates: null, has_route: $('Route_Filter').first().json.has_route || false, path: $('Route_Filter').first().json.path || []}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        464,
+        624
+      ],
+      "id": "cd0884e2-3b23-408f-b2b0-eef2eb56f075",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"answer\": \"현재 입력하신 조건에 맞는 등록 경로를 찾지 못했어요. VeriWay는 현재 팀이 직접 답사한 골든 경로를 우선 지원합니다. 등록되지 않은 경로는 잘못된 안내를 방지하기 위해 임의로 추천하지 않습니다.\",\n  \"has_route\": false,\n  \"supported_routes\": [\n    \"학생회관 → 명신관\",\n    \"학생회관 → 순헌관\",\n    \"정문 → 도서관\",\n    \"정문 → 다목적관\",\n    \"새힘관 → 명신관\",\n    \"프라임관 → 창학관\"\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        256,
+        896
+      ],
+      "id": "3bfbca97-1b00-4886-89af-07b9f6114d2e",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Upstage Solar - 이동 조건 JSON 추출": {
+      "main": [
+        [
+          {
+            "node": "JSON_Parse_Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Upstage Solar - 최종 경로 안내문 생성",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upstage Solar - 최종 경로 안내문 생성": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON_Parse_Check": {
+      "main": [
+        [
+          {
+            "node": "Google_Sheets_Routes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input_Preprocess": {
+      "main": [
+        [
+          {
+            "node": "Upstage Solar - 이동 조건 JSON 추출",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_Input": {
+      "main": [
+        [
+          {
+            "node": "Input_Preprocess",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route_Filter": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google_Sheets_Routes": {
+      "main": [
+        [
+          {
+            "node": "Route_Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4ac8ecc8-d4c5-4cef-a666-c2cf16ba01d4",
+  "meta": {
+    "instanceId": "9f46e20ea14b6af04b798ab0680187ebd3f053dab7311616fff72f07be6718e9"
+  },
+  "id": "fMZVgBVM0wwx8j0w",
+  "tags": []
+}
