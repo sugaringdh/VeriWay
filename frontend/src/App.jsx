@@ -10,7 +10,7 @@ const QUICK_EXAMPLES = [
   '🦽 학생회관에서 명신관까지 휠체어로 가고 싶어',
   '🩼 명신관에서 미술대학까지 목발 짚고 가야 해',
   '🧳 정문에서 순헌관까지 캐리어 끌고 가',
-  '👶 정문에서 눈꽃광장홀까지 유모차 끌어야 해',
+  '👶 정문에서 프라임관까지 유모차 끌어야 해',
 ]
 
 const MOBILITY_ICONS = {
@@ -56,10 +56,37 @@ function LoadingCard({ step }) {
 }
 
 function RouteResult({ data, onReset }) {
-  const [expanded, setExpanded] = useState(false)
   const [showReport, setShowReport] = useState(false)
   const [reportType, setReportType] = useState('')
   const [reportDetail, setReportDetail] = useState('')
+
+  const SECTION_META = {
+    '이동 조건 분석':   { icon: '🔍', cls: 'card-icon-purple' },
+    '추천 경로':       { icon: '🗺️', cls: 'card-icon-blue'   },
+    '피해야 할 장애물': { icon: '⚠️', cls: 'card-icon-orange' },
+    '이용 가능한 편의시설': { icon: '♿', cls: 'card-icon-teal' },
+    '건물 내부 길찾기': { icon: '🏢', cls: 'card-icon-blue'   },
+    '이동 안내':       { icon: '🚶', cls: 'card-icon-teal'   },
+    '주의할 점':       { icon: '⚠️', cls: 'card-icon-orange' },
+  }
+
+  const parseSections = (text) => {
+    const result = []
+    const regex = /\[([^\]]+)\]/g
+    let match
+    const indices = []
+    while ((match = regex.exec(text)) !== null) {
+      indices.push({ title: match[1], start: match.index, end: match.index + match[0].length })
+    }
+    for (let i = 0; i < indices.length; i++) {
+      const { title, end } = indices[i]
+      const nextStart = indices[i + 1]?.start ?? text.length
+      const body = text.slice(end, nextStart).trim()
+      if (body) result.push({ title, body })
+    }
+    return result
+  }
+
 
   const FORM_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSdK-T_po1e81kbkoNKUlIMlbwSNweGejmbBbLJ-LKki5Ke80Q/viewform'
   const openReport = () => {
@@ -99,9 +126,7 @@ function RouteResult({ data, onReset }) {
   }
 
   const mobilityIcon = MOBILITY_ICONS[data.mobility_condition] || '🚶'
-  const answerLines = (data.answer || '').split('\n').filter(Boolean)
-  const previewLines = answerLines.slice(0, 6)
-  const hasMore = answerLines.length > 6
+  const sections = parseSections(data.answer || '')
 
   return (
     <div className="result-section">
@@ -142,45 +167,76 @@ function RouteResult({ data, onReset }) {
           />
         </div>
 
-        {/* 오른쪽: AI 안내 + 정보 */}
+        {/* 오른쪽: AI 안내 섹션 카드들 */}
         <div className="result-col-info">
 
-          {/* AI 경로 안내 */}
-          <div className="answer-card">
-            <div className="card-header">
-              <div className="card-icon card-icon-purple">🤖</div>
-              <div>
-                <div className="card-title">AI 경로 안내</div>
-                <div className="card-subtitle">Solar-pro3 기반 맞춤 안내문</div>
-              </div>
-            </div>
-            <div className="answer-text">
-              {(expanded ? answerLines : previewLines).map((line, i) => (
-                <p key={i} style={{ margin: '4px 0' }}>{line}</p>
-              ))}
-            </div>
-            {hasMore && (
-              <button className="expand-btn" onClick={() => setExpanded(v => !v)}>
-                {expanded ? '▲ 접기' : '▼ 더 보기'}
-              </button>
-            )}
-          </div>
+          {/* AI 섹션 카드 */}
+          {sections.length > 0 ? sections.map((sec, i) => {
+            const meta = SECTION_META[sec.title] || { icon: '📋', cls: 'card-icon-purple' }
+            const isFirst = i === 0
+            const isRoute = sec.title === '추천 경로'
+            const isObstacle = sec.title === '피해야 할 장애물'
+            const isFacility = sec.title === '이용 가능한 편의시설'
+            const pathStops = Array.isArray(data.path) && data.path.length > 0 ? data.path : null
 
-          {/* 내부 안내 */}
-          {data.indoor_guide && (
-            <div className="info-card">
-              <div className="card-header" style={{ marginBottom:0,paddingBottom:0,border:'none' }}>
-                <div className="card-icon card-icon-blue">🏢</div>
-                <div className="card-title">건물 내부 안내</div>
-              </div>
-              <div className="info-list">
-                <div className="info-item">
-                  <span className="info-item-icon">🔹</span>
-                  <span>{data.indoor_guide}</span>
+            // 실제 데이터 우선 사용
+            const realItems = isObstacle && data.obstacles
+              ? data.obstacles.split(/[,，、\n]/).map(s => s.trim()).filter(Boolean)
+              : isFacility && data.facilities
+              ? data.facilities.split(/[,，、\n]/).map(s => s.trim()).filter(Boolean)
+              : null
+
+            const aiLines = sec.body.split('\n').filter(Boolean)
+
+            return (
+              <div key={i} className="info-card">
+                <div className="card-header" style={{ marginBottom: 8 }}>
+                  <div className={`card-icon ${meta.cls}`}>{meta.icon}</div>
+                  <div>
+                    <div className="card-title">{sec.title}</div>
+                    {isFirst && <div className="card-subtitle">Solar-pro3 기반 맞춤 안내문</div>}
+                  </div>
                 </div>
+                {isRoute && pathStops && (
+                  <div className="path-flow">
+                    {pathStops.map((stop, k) => (
+                      <span key={k} className="path-flow-item">
+                        <span className="path-stop">{stop}</span>
+                        {k < pathStops.length - 1 && <span className="path-arrow">→</span>}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="info-list">
+                  {(realItems || aiLines).map((line, j) => (
+                    <div key={j} className="info-item">
+                      <span className="info-item-icon">{isObstacle ? '🚧' : isFacility ? '✅' : '🔹'}</span>
+                      <span style={{ wordBreak: 'break-word' }}>{line.replace(/^[-•]\s*/, '')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          }) : (
+            <div className="answer-card">
+              <div className="card-header">
+                <div className="card-icon card-icon-purple">🤖</div>
+                <div>
+                  <div className="card-title">AI 경로 안내</div>
+                  <div className="card-subtitle">Solar-pro3 기반 맞춤 안내문</div>
+                </div>
+              </div>
+              <div className="answer-text">
+                {(data.answer || '').split('\n').filter(Boolean).map((line, i) => (
+                  <p key={i} style={{ margin: '4px 0' }}>{line}</p>
+                ))}
               </div>
             </div>
           )}
+
+
+
+
 
           {/* 편의시설 */}
           {data.facilities && (
@@ -285,7 +341,7 @@ export default function App() {
 
   // ── 건물명 추출 (n8n 의존 없이 프론트에서 직접 처리) ──
   const BUILDINGS = [
-    '백주년기념관','행파교수회관','눈꽃광장홀','중앙도서관',
+    '백주년기념관','행파교수회관','눈꽃광장','중앙도서관',
     '미술대학','음악대학','약학대학','약학대',
     '학생회관','명신관','순헌관','행정관','새힘관','진리관','명재관',
     '기숙사','과학관','다목적관','창학관','프라임관','프라이관',
@@ -500,7 +556,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        VeriWay © 2025 · Powered by <a href="#">Upstage Solar AI</a> · 배리어프리 이동경로 서비스
+        VeriWay © 2026 · Team FIT · Powered by <a href="#">Upstage Solar AI</a> · 배리어프리 이동경로 서비스
       </footer>
     </div>
   )

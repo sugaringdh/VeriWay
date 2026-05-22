@@ -848,3 +848,33 @@ body  { overflow-x: unset !important; }
     align-self: start !important;
   }
 }
+
+/* ── Path flow in 추천 경로 card ── */
+.path-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.path-flow-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.path-stop {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(124,58,237,0.15);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.path-arrow {
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  font-weight: bold;
+}
