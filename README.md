@@ -89,5 +89,14 @@ Google Sheets에 아래 형식으로 행을 추가하면 바로 반영됩니다.
 
 ## 팀
 
-**FIT** — 2026 Low-Code AI Challenge
+**FIT** — 2026 Low-Code AI Challenge  
 숙명여자대학교
+
+---
+
+## 📊 경로 데이터 (Google Sheets)
+
+VeriWay의 경로 데이터는 Google Sheets로 관리됩니다.  
+코드 수정 없이 시트에 행을 추가하는 것만으로 새 경로를 등록할 수 있습니다.
+
+🔗 **[VeriWay 경로 데이터 시트 바로가기](https://docs.google.com/spreadsheets/d/1zMUzW5DOTu8grUNsc_2hwlcsCyhRhe4weJ9quHF7Hr4/edit?usp=sharing)**
