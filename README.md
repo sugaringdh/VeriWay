@@ -11,7 +11,7 @@
 - 자연어 입력으로 출발지 · 목적지 · 이동상태 자동 추출
 - 이동상태에 따른 맞춤 경로 필터링 (계단 유무, 엘리베이터 여부)
 - 구글 시트 기반 경로 데이터 관리 (코드 수정 없이 경로 추가 가능)
-- 캠퍼스 지도 위 경로 시각화 (개발 중)
+- 캠퍼스 지도 위 경로 시각화 
 
 ---
 
@@ -21,7 +21,7 @@
 "학생회관에서 순헌관으로 목발 짚고 가고 싶어"
 → 계단 없는 B 경로 안내
 
-"휠체어 타고 중앙도서관 가는 길 알려줘"
+"휠체어 타고  명신관에서 중앙도서관 가는 길 알려줘"
 → 엘리베이터 있는 경로 안내
 ```
 
@@ -45,8 +45,8 @@ VeriWay/
 ├── README.md
 ├── workflow/
 │   └── veriway.json       # n8n 워크플로우 (import해서 사용)
-└── web/
-    └── index.html         # 지도 웹페이지 (개발 중)
+└── frontend/
+    └── veriway-app         # 지도 웹페이지 
 ```
 
 ---
@@ -89,5 +89,14 @@ Google Sheets에 아래 형식으로 행을 추가하면 바로 반영됩니다.
 
 ## 팀
 
-**FIT** — 2026 Low-Code AI Challenge
+**FIT** — 2026 Low-Code AI Challenge  
 숙명여자대학교
+
+---
+
+## 📊 경로 데이터 (Google Sheets)
+
+VeriWay의 경로 데이터는 Google Sheets로 관리됩니다.  
+코드 수정 없이 시트에 행을 추가하는 것만으로 새 경로를 등록할 수 있습니다.
+
+🔗 **[VeriWay 경로 데이터 시트 바로가기](https://docs.google.com/spreadsheets/d/1zMUzW5DOTu8grUNsc_2hwlcsCyhRhe4weJ9quHF7Hr4/edit?usp=sharing)**
